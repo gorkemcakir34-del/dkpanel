@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "75415478330",
+    "project_id": "saha-dashboard-1d486",
+    "storage_bucket": "saha-dashboard-1d486.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:75415478330:android:53d02c31060d0f58ccd503",
+        "android_client_info": {
+          "package_name": "tr.net.gorkemcakir.sahadash"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_s5Tnb07PfMz8ckvaQY7R_z2wP5DNBzc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
