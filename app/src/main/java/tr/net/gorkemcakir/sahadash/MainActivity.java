@@ -8,7 +8,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Base64;
+import com.google.firebase.messaging.FirebaseMessaging;
 import android.webkit.*;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
@@ -98,13 +102,40 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (b != null) web.restoreState(b); else web.loadUrl(base);
+        // Push: bildirim izni (Android 13+) ve FCM jetonu
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 7);
+        }
+        try {
+            FirebaseMessaging.getInstance().getToken().addOnSuccessListener(t ->
+                getSharedPreferences("push", MODE_PRIVATE).edit().putString("token", t).apply());
+        } catch (Exception e) { }
+
+        String hedef = hedefUrl(getIntent());
+        if (b != null) web.restoreState(b); else web.loadUrl(hedef != null ? hedef : base);
+    }
+
+    /** Bildirime tıklanınca gelen yolu (mesajlar.php?id=..) tam adrese çevirir. */
+    private String hedefUrl(Intent in) {
+        if (in == null) return null;
+        String u = in.getStringExtra("url");
+        if (u == null || u.isEmpty() || u.contains("://") || u.startsWith("/")) return null;
+        in.removeExtra("url");
+        return base + u;
+    }
+
+    @Override protected void onNewIntent(Intent in) {
+        super.onNewIntent(in);
+        setIntent(in);
+        String h = hedefUrl(in);
+        if (h != null) web.loadUrl(h);
     }
 
     @Override protected void onSaveInstanceState(Bundle o) { super.onSaveInstanceState(o); web.saveState(o); }
     @Override protected void onPause() { super.onPause(); CookieManager.getInstance().flush(); }
 
     class Bridge {
+        @JavascriptInterface public String fcmToken() { return getSharedPreferences("push", MODE_PRIVATE).getString("token", ""); }
         @JavascriptInterface public void retry() { runOnUiThread(() -> web.loadUrl(base)); }
         @JavascriptInterface public void toast(String m) { runOnUiThread(() -> Toast.makeText(MainActivity.this, m, Toast.LENGTH_SHORT).show()); }
         @JavascriptInterface public void saveBase64(String data, String name, String mime) {
